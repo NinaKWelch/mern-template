@@ -4,6 +4,10 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
+// calling dotenv first ensures that the environment variables from the .env file 
+// are available globally before the code from the other modules is imported
+require('dotenv').config()
+const File = require('./models/file')
 
 // in order to access the data easily
 // we need the help of the express json-parser
@@ -17,52 +21,18 @@ app.use(cors())
 // from the directory you specify (ie. public)
 app.use(express.static('build'))
 
-let files = [
-  {
-    id: 1,
-    file: "File 1",
-    date: "2022-05-30T17:30:31.098Z",
-    note: ""
-  },
-  {
-    id: 2,
-    file: "File 2",
-    date: "2022-05-30T18:39:34.091Z",
-    note: ""
-  },
-  {
-    id: 3,
-    file: "File 3",
-    date: "2022-05-30T19:20:14.298Z",
-    note: ""
-  }
-]
-
-// create random id
-const generateId = () => {
-  const maxId = files.length > 0
-    ? Math.max(...files.map(n => n.id))
-    : 0
-  return maxId + 1
-}
-
-
-app.get('/', (request, response) => {
-  response.send('<h1>Hello World!</h1>')
-})
-
 app.get('/api/files', (request, response) => {
-  response.json(files)
+  File.find({}).then(files => {
+    response.json(files)
+  })
 })
 
-app.get('/api/files/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const file = files.find(file => file.id === id)
-  
-  // when no data is attached to the response,
-  // use the status method for setting the status,
-  // and the end method for responding to the request without sending any data
-  file ? response.json(file) : response.status(404).end()
+app.get('/api/files/:id', (request, response, next) => {
+  // fetch individual file by using Mongoose findById method
+  File.findById(request.params.id).then(file => {
+    // error handling for nonexistent file (404 not found)
+    file ? response.json(file) : response.status(404).end()
+  }).catch(error => next(error))
 })
 
 app.post('/api/files', (request, response) => {
@@ -84,38 +54,82 @@ app.post('/api/files', (request, response) => {
 
   // it is better to generate timestamps on the server than in the browser,
   // since we can't trust that host machine running the browser has its clock set correctly. 
-  const file = {
+  const file = new File({
     file: body.file,
     note: body.note || "",
-    date: new Date(),
-    id: generateId(),
-  }
+    date: new Date()
+  })
 
-  files = files.concat(file)
-
-  response.json(file)
+  // the response is sent inside of the callback function for the save operation.
+  // this ensures that the response is sent only if the operation succeeded. 
+  file.save().then(savedFile => {
+    response.json(savedFile)
+  })
 })
 
-app.delete('/api/files/:id', (request, response) => {
+app.delete('/api/files/:id', (request, response, next) => {
+  // delete individual file by using Mongoose findByIdAndRemove method
   // the event handler function can access the id
   // from the params property of the request object
-  const id = Number(request.params.id)
-  files = files.filter(file => file.id !== id)
+  File.findByIdAndRemove(request.params.id)
+    // result callback parameter can be used for checking if a resource actually was deleted, 
+    // and we could use that information for returning different status codes for the two cases if we deemed it necessary
+    .then(result => {
+      // 204 no content
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+})
 
-  // if deleting the resource is successful, 
-  // respond with the status code 204 (no content)
-  response.status(204).end()
+app.put('/api/files/:id', (request, response, next) => {
+  const body = request.body
+
+  const file = {
+    file: body.file,
+    note: body.note,
+  }
+
+  // update individual file by using Mongoose findByIdAndUpdate method
+  // by default, the updatedFile parameter of the event handler
+  // receives the original document without the modifications.
+  // by adding an optional { new: true } parameter, the event handler
+  // will be called with the new modified document instead of the original
+  File.findByIdAndUpdate(request.params.id, file, { new: true })
+    // findByIdAndUpdate method receives a regular JavaScript object as its parameter,
+    // and not a new file object created with the File constructor function.
+    .then(updatedFile => {
+      response.json(updatedFile)
+    })
+    .catch(error => next(error))
 })
 
 // catch requests made to non-existent routes
 // returns an error message in the JSON format
+// the middleware for handling unsupported routes
+// should be placed just before the error handler
 const unknownEndpoint = (request, response) => {
+  // 404 unknown endpoint
   response.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
 
-const PORT = process.env.PORT 
+// error handling middleware has to be the last loaded middleware
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    // 400 bad request
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+// this has to be the last loaded middleware.
+app.use(errorHandler)
+
+const PORT = process.env.PORT
 // listens to the HTTP requests sent to the port 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
