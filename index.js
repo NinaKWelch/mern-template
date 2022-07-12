@@ -7,8 +7,8 @@ const app = express()
 
 // create random id
 const generateId = () => {
-  const maxId = notes.length > 0
-    ? Math.max(...notes.map(n => n.id))
+  const maxId = files.length > 0
+    ? Math.max(...files.map(n => n.id))
     : 0
   return maxId + 1
 }
@@ -24,24 +24,24 @@ app.use(cors())
 // for serving static files (such as HTML, CSS and JavaScript) from the directory you specify (ie. public)
 app.use(express.static())
 
-let notes = [
+let files = [
   {
     id: 1,
-    content: "HTML is easy",
+    file: "File 1",
     date: "2022-05-30T17:30:31.098Z",
-    important: true
+    note: ""
   },
   {
     id: 2,
-    content: "Browser can execute only Javascript",
+    file: "File 2",
     date: "2022-05-30T18:39:34.091Z",
-    important: false
+    note: ""
   },
   {
     id: 3,
-    content: "GET and POST are the most important methods of HTTP protocol",
+    file: "File 3",
     date: "2022-05-30T19:20:14.298Z",
-    important: true
+    note: ""
   }
 ]
 
@@ -49,21 +49,21 @@ app.get('/', (request, response) => {
   response.send('<h1>Hello World!</h1>')
 })
 
-app.get('/api/notes', (request, response) => {
-  response.json(notes)
+app.get('/api/files', (request, response) => {
+  response.json(files)
 })
 
-app.get('/api/notes/:id', (request, response) => {
+app.get('/api/files/:id', (request, response) => {
   const id = Number(request.params.id)
-  const note = notes.find(note => note.id === id)
+  const file = files.find(file => file.id === id)
   
   // when no data is attached to the response,
   // use the status method for setting the status,
   // and the end method for responding to the request without sending any data
-  note ? response.json(note) : response.status(404).end()
+  file ? response.json(file) : response.status(404).end()
 })
 
-app.post('/api/notes', (request, response) => {
+app.post('/api/files', (request, response) => {
   // console.log(request.headers) /** check the request object headers */
   // the event handler function can access the data
   // from the body property of the request object
@@ -73,32 +73,32 @@ app.post('/api/notes', (request, response) => {
   // content property is required
   // calling return is crucial,
   // otherwise the code will execute to the very end
-  // and the malformed note gets saved to the application
-  if (!body.content) {
+  // and the malformed file gets saved to the application
+  if (!body.file) {
     return response.status(400).json({ 
-      error: 'content missing' 
+      error: 'missing file' 
     })
   }
 
   // it is better to generate timestamps on the server than in the browser,
   // since we can't trust that host machine running the browser has its clock set correctly. 
-  const note = {
-    content: body.content,
-    important: body.important || false,
+  const file = {
+    file: body.file,
+    note: body.note || "",
     date: new Date(),
     id: generateId(),
   }
 
-  notes = notes.concat(note)
+  files = files.concat(file)
 
-  response.json(note)
+  response.json(file)
 })
 
-app.delete('/api/notes/:id', (request, response) => {
+app.delete('/api/files/:id', (request, response) => {
   // the event handler function can access the id
   // from the params property of the request object
   const id = Number(request.params.id)
-  notes = notes.filter(note => note.id !== id)
+  files = files.filter(file => file.id !== id)
 
   // if deleting the resource is successful, 
   // respond with the status code 204 (no content)
