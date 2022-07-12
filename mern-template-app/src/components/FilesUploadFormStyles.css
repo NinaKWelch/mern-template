@@ -1,0 +1,20 @@
+/**
+You want to hide the input, but do that in a way that screenreaders don’t assume it does not exist.
+The method for hiding is to make it ‘visually’ hidden, but not actually hidden to assistive technologies.
+https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications#using_a_label_element_to_trigger_a_hidden_file_input_element
+*/
+
+/* input[type="file"] { 
+  opacity: 0; /* make transparent */
+  /*z-index: -1; /* move under anything else */
+  /*position: absolute; /* don't let it take up space */
+/*}*/
+
+.input-container {
+  margin-bottom: 20px;
+}
+
+.file-input-label {
+  padding: 5px;
+  border: 1px solid gray;
+}
