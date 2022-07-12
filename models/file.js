@@ -1,22 +1,16 @@
 const mongoose = require('mongoose')
-// remember to add access to the database url for Heroku
-// with command heroku config:set MONGODB_URI='xxx'
-const url = process.env.MONGODB_URI
-
-console.log('connecting to', url)
-
-mongoose.connect(url)
-  .then(result => {
-    console.log('connected to MongoDB')
-  })
-  .catch((error) => {
-    console.log('error connecting to MongoDB:', error.message)
-  })
 
 // the schema tells Mongoose how the note objects are to be stored in the database
+// use Mongoose validation functionality to ensure required values ave been added
 const fileSchema = new mongoose.Schema({
-    file: String,
-    date: Date,
+    file: {
+      type: String,
+      required: true
+    },
+    date: { 
+      type: Date,
+      required: true
+    },
     note: String,
   })
 
