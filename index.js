@@ -2,16 +2,8 @@
 // Express is a Node.js web application framework for easier server side development with Node
 // http://expressjs.com
 const express = require('express')
-const cors = require('cors')
 const app = express()
-
-// create random id
-const generateId = () => {
-  const maxId = files.length > 0
-    ? Math.max(...files.map(n => n.id))
-    : 0
-  return maxId + 1
-}
+const cors = require('cors')
 
 // in order to access the data easily
 // we need the help of the express json-parser
@@ -21,8 +13,9 @@ app.use(express.json())
 app.use(cors())
 
 // use the express-static middleware
-// for serving static files (such as HTML, CSS and JavaScript) from the directory you specify (ie. public)
-app.use(express.static())
+// for serving static files (such as HTML, CSS and JavaScript)
+// from the directory you specify (ie. public)
+app.use(express.static('build'))
 
 let files = [
   {
@@ -44,6 +37,15 @@ let files = [
     note: ""
   }
 ]
+
+// create random id
+const generateId = () => {
+  const maxId = files.length > 0
+    ? Math.max(...files.map(n => n.id))
+    : 0
+  return maxId + 1
+}
+
 
 app.get('/', (request, response) => {
   response.send('<h1>Hello World!</h1>')
@@ -113,7 +115,7 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint)
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT 
 // listens to the HTTP requests sent to the port 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

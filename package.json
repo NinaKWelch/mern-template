@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node index.js",
+    "dev": "heroku local",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
