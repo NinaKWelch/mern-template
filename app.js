@@ -2,6 +2,11 @@ const config = require('./utils/config')
 // Express is a Node.js web application framework for easier server side development with Node
 // http://expressjs.com
 const express = require('express')
+// With express-async-errors the try/catch from the methods can be left out
+// We also do not need  the next(exception) call anymore
+// If an exception occurs in an async route,
+// the execution is automatically passed to the error handling middleware
+require('express-async-errors')
 const app = express()
 const cors = require('cors')
 const filesRouter = require('./controllers/files')

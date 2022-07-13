@@ -6,25 +6,21 @@ const filesRouter = require('express').Router()
 const File = require('../models/file')
 
 // GET FILES FORM DATABASE
-filesRouter.get('/', (request, response) => {
-  File.find({}).then(files => {
-    response.json(files)
-  })
+filesRouter.get('/', async (request, response) => {
+  const files = await File.find({})
+  response.json(files)
 })
 
 // GET A SPECIFIC FILE FOROM DATATBASE
-filesRouter.get('/:id', (request, response, next) => {
+filesRouter.get('/:id', async (request, response) => {
   // fetch individual file by using Mongoose findById method
-  File.findById(request.params.id)
-  .then(file => {
-    // error handling for nonexistent file (404 not found)
-    file ? response.json(file) : response.status(404).end()
-  })
-  .catch(error => next(error))
+  const file = await File.findById(request.params.id)
+  // error handling for nonexistent file (404 not found)
+  file ? response.json(file) : response.status(404).end()
 })
 
 // ADD FILE TO DATABASE
-filesRouter.post('/', (request, response, next) => {
+filesRouter.post('/', async (request, response) => {
   // console.log(request.headers) /** check the request object headers */
   // the event handler function can access the data
   // from the body property of the request object
@@ -40,27 +36,21 @@ filesRouter.post('/', (request, response, next) => {
   })
 
   // the response is sent inside of the callback function for the save operation.
-  // this ensures that the response is sent only if the operation succeeded. 
-  file.save()
-  .then(savedFile => {
-    response.json(savedFile)
-  })
-  .catch(error => next(error))
+  // this ensures that the response is sent only if the operation succeeded.
+  const savedFile = await file.save()
+  response.status(201).json(savedFile)
 })
 
 // DELERE FILE FORM DATABASE
-filesRouter.delete('/:id', (request, response, next) => {
-  // delete individual file by using Mongoose findByIdAndRemove method
-  // the event handler function can access the id
-  // from the params property of the request object
-  File.findByIdAndRemove(request.params.id)
-    // result callback parameter can be used for checking if a resource actually was deleted, 
-    // and we could use that information for returning different status codes for the two cases if we deemed it necessary
-    .then(result => {
-      // 204 no content
-      response.status(204).end()
-    })
-    .catch(error => next(error))
+filesRouter.delete('/:id', async (request, response) => {
+    // delete individual file by using Mongoose findByIdAndRemove method
+    // the event handler function can access the id
+    // from the params property of the request object
+    // NOTE: result callback parameter could be added here
+    // for checking if a resource actually was deleted
+    await File.findByIdAndRemove(request.params.id)
+    // 204 no content
+    response.status(204).end()
 })
 
 // UPDATE FEXISTING FILE
